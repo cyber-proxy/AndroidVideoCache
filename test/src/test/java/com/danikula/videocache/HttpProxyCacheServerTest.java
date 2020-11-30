@@ -4,11 +4,13 @@ import android.net.Uri;
 import android.util.Pair;
 
 import com.danikula.android.garden.io.IoUtils;
+import com.danikula.videocache.api.HttpProxyCacheServer;
 import com.danikula.videocache.file.FileNameGenerator;
 import com.danikula.videocache.file.Md5FileNameGenerator;
 import com.danikula.videocache.headers.HeaderInjector;
 import com.danikula.videocache.support.ProxyCacheTestUtils;
 import com.danikula.videocache.support.Response;
+import com.danikula.videocache.util.ProxyCacheUtils;
 
 import org.junit.Before;
 import org.junit.Test;

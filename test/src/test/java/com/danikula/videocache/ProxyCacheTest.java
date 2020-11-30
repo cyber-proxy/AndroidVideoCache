@@ -1,7 +1,12 @@
 package com.danikula.videocache;
 
 import com.danikula.android.garden.io.IoUtils;
+import com.danikula.videocache.core.ProxyCache;
 import com.danikula.videocache.file.FileCache;
+import com.danikula.videocache.others.ByteArrayCache;
+import com.danikula.videocache.others.ByteArraySource;
+import com.danikula.videocache.source.HttpUrlSource;
+import com.danikula.videocache.source.Source;
 import com.danikula.videocache.support.ProxyCacheTestUtils;
 
 import org.junit.Test;

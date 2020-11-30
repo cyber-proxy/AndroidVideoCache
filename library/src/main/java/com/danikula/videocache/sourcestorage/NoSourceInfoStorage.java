@@ -1,6 +1,6 @@
 package com.danikula.videocache.sourcestorage;
 
-import com.danikula.videocache.SourceInfo;
+import com.danikula.videocache.source.SourceInfo;
 
 /**
  * {@link SourceInfoStorage} that does nothing.

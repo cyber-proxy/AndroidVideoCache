@@ -4,7 +4,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.danikula.videocache.api.HttpProxyCacheServer;
+import com.danikula.videocache.core.HttpProxyCache;
 import com.danikula.videocache.file.FileCache;
+import com.danikula.videocache.source.HttpUrlSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,14 +16,14 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 
 /**
  * Client for {@link HttpProxyCacheServer}
  *
  * @author Alexey Danilov (danikula@gmail.com).
  */
-final class HttpProxyCacheServerClients {
+public final class HttpProxyCacheServerClients {
 
     private final AtomicInteger clientsCount = new AtomicInteger(0);
     private final String url;
@@ -35,7 +38,7 @@ final class HttpProxyCacheServerClients {
         this.uiCacheListener = new UiListenerHandler(url, listeners);
     }
 
-    public void processRequest(GetRequest request, Socket socket) throws ProxyCacheException, IOException {
+    public void processRequest(HttpGetRequest request, Socket socket) throws ProxyCacheException, IOException {
         startProcessRequest();
         try {
             clientsCount.incrementAndGet();
@@ -45,6 +48,10 @@ final class HttpProxyCacheServerClients {
         }
     }
 
+    /**
+     * 新建，以处理请求
+     * @throws ProxyCacheException
+     */
     private synchronized void startProcessRequest() throws ProxyCacheException {
         proxyCache = proxyCache == null ? newHttpProxyCache() : proxyCache;
     }
@@ -78,10 +85,17 @@ final class HttpProxyCacheServerClients {
         return clientsCount.get();
     }
 
+    /**
+     * 对一个url请求，新建一个FileCache,并且其请求由HttpProxyCache负责对接
+     * @return
+     * @throws ProxyCacheException
+     */
     private HttpProxyCache newHttpProxyCache() throws ProxyCacheException {
         HttpUrlSource source = new HttpUrlSource(url, config.sourceInfoStorage, config.headerInjector);
+
         FileCache cache = new FileCache(config.generateCacheFile(url), config.diskUsage);
         HttpProxyCache httpProxyCache = new HttpProxyCache(source, cache);
+
         httpProxyCache.registerCacheListener(uiCacheListener);
         return httpProxyCache;
     }

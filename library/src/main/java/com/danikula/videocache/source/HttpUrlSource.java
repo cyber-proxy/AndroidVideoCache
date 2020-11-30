@@ -1,11 +1,15 @@
-package com.danikula.videocache;
+package com.danikula.videocache.source;
 
 import android.text.TextUtils;
 
+import com.danikula.videocache.InterruptedProxyCacheException;
+import com.danikula.videocache.ProxyCacheException;
+import com.danikula.videocache.core.ProxyCache;
 import com.danikula.videocache.headers.EmptyHeadersInjector;
 import com.danikula.videocache.headers.HeaderInjector;
 import com.danikula.videocache.sourcestorage.SourceInfoStorage;
 import com.danikula.videocache.sourcestorage.SourceInfoStorageFactory;
+import com.danikula.videocache.util.ProxyCacheUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +22,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 
-import static com.danikula.videocache.Preconditions.checkNotNull;
-import static com.danikula.videocache.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -77,6 +81,7 @@ public class HttpUrlSource implements Source {
         try {
             connection = openConnection(offset, -1);
             String mime = connection.getContentType();
+
             inputStream = new BufferedInputStream(connection.getInputStream(), DEFAULT_BUFFER_SIZE);
             long length = readSourceAvailableBytes(connection, offset, connection.getResponseCode());
             this.sourceInfo = new SourceInfo(sourceInfo.url, length, mime);
@@ -92,6 +97,11 @@ public class HttpUrlSource implements Source {
                 : responseCode == HTTP_PARTIAL ? contentLength + offset : sourceInfo.length;
     }
 
+    /**
+     * Content-Length是返回的http连接的头
+     * @param connection
+     * @return
+     */
     private long getContentLength(HttpURLConnection connection) {
         String contentLengthValue = connection.getHeaderField("Content-Length");
         return contentLengthValue == null ? -1 : Long.parseLong(contentLengthValue);
@@ -152,6 +162,15 @@ public class HttpUrlSource implements Source {
         }
     }
 
+    /**
+     * 此处没有调用connection.connect，那么数据是如何获取到的呢？
+     * 处理Http请求
+     * @param offset
+     * @param timeout
+     * @return
+     * @throws IOException
+     * @throws ProxyCacheException
+     */
     private HttpURLConnection openConnection(long offset, int timeout) throws IOException, ProxyCacheException {
         HttpURLConnection connection;
         boolean redirected;
@@ -162,12 +181,15 @@ public class HttpUrlSource implements Source {
             connection = (HttpURLConnection) new URL(url).openConnection();
             injectCustomHeaders(connection, url);
             if (offset > 0) {
+                // setRequestProperty用于设置请求头，
+                // FIXME: 2020/11/27 文档说setRequestProperty只能在连接建立之前调用
                 connection.setRequestProperty("Range", "bytes=" + offset + "-");
             }
             if (timeout > 0) {
                 connection.setConnectTimeout(timeout);
                 connection.setReadTimeout(timeout);
             }
+
             int code = connection.getResponseCode();
             redirected = code == HTTP_MOVED_PERM || code == HTTP_MOVED_TEMP || code == HTTP_SEE_OTHER;
             if (redirected) {

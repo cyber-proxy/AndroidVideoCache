@@ -12,7 +12,7 @@ import java.io.File;
  *
  * @author Alexey Danilov (danikula@gmail.com).
  */
-class Config {
+public class Config {
 
     public final File cacheRoot;
     public final FileNameGenerator fileNameGenerator;
@@ -20,7 +20,7 @@ class Config {
     public final SourceInfoStorage sourceInfoStorage;
     public final HeaderInjector headerInjector;
 
-    Config(File cacheRoot, FileNameGenerator fileNameGenerator, DiskUsage diskUsage, SourceInfoStorage sourceInfoStorage, HeaderInjector headerInjector) {
+    public Config(File cacheRoot, FileNameGenerator fileNameGenerator, DiskUsage diskUsage, SourceInfoStorage sourceInfoStorage, HeaderInjector headerInjector) {
         this.cacheRoot = cacheRoot;
         this.fileNameGenerator = fileNameGenerator;
         this.diskUsage = diskUsage;

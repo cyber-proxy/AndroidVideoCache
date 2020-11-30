@@ -6,10 +6,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.danikula.videocache.SourceInfo;
+import com.danikula.videocache.source.SourceInfo;
 
-import static com.danikula.videocache.Preconditions.checkAllNotNull;
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkAllNotNull;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 
 /**
  * Database based {@link SourceInfoStorage}.

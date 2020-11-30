@@ -2,7 +2,7 @@ package com.danikula.videocache.file;
 
 import android.text.TextUtils;
 
-import com.danikula.videocache.ProxyCacheUtils;
+import com.danikula.videocache.util.ProxyCacheUtils;
 
 /**
  * Implementation of {@link FileNameGenerator} that uses MD5 of url as file name

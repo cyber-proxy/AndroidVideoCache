@@ -1,7 +1,11 @@
-package com.danikula.videocache;
+package com.danikula.videocache.core;
 
 import android.text.TextUtils;
 
+import com.danikula.videocache.CacheListener;
+import com.danikula.videocache.HttpGetRequest;
+import com.danikula.videocache.source.HttpUrlSource;
+import com.danikula.videocache.ProxyCacheException;
 import com.danikula.videocache.file.FileCache;
 
 import java.io.BufferedOutputStream;
@@ -10,56 +14,73 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Locale;
 
-import static com.danikula.videocache.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
+import static com.danikula.videocache.util.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
 
 /**
  * {@link ProxyCache} that read http url and writes data to {@link Socket}
  *
  * @author Alexey Danilov (danikula@gmail.com).
  */
-class HttpProxyCache extends ProxyCache {
+public class HttpProxyCache extends ProxyCache {
 
     private static final float NO_CACHE_BARRIER = .2f;
 
-    private final HttpUrlSource source;
+    private final HttpUrlSource httpSource;
     private final FileCache cache;
     private CacheListener listener;
 
-    public HttpProxyCache(HttpUrlSource source, FileCache cache) {
-        super(source, cache);
+    public HttpProxyCache(HttpUrlSource httpSource, FileCache cache) {
+        super(httpSource, cache);
         this.cache = cache;
-        this.source = source;
+        this.httpSource = httpSource;
     }
 
     public void registerCacheListener(CacheListener cacheListener) {
         this.listener = cacheListener;
     }
 
-    public void processRequest(GetRequest request, Socket socket) throws IOException, ProxyCacheException {
-        OutputStream out = new BufferedOutputStream(socket.getOutputStream());
+    /**
+     * 1.   有缓存
+     *  1）  先从http连接中读取流到缓存中
+     *  2）  然后从缓存中读取并输出到socket中
+     * 2.   没有缓存
+     *  直接从http连接中读取字节流并输出到socket
+     * @param request
+     * @param socket
+     * @throws IOException
+     * @throws ProxyCacheException
+     */
+    public void processRequest(HttpGetRequest request, Socket socket) throws IOException, ProxyCacheException {
+        OutputStream socketOut = new BufferedOutputStream(socket.getOutputStream());
         String responseHeaders = newResponseHeaders(request);
-        out.write(responseHeaders.getBytes("UTF-8"));
+        socketOut.write(responseHeaders.getBytes("UTF-8"));
 
         long offset = request.rangeOffset;
         if (isUseCache(request)) {
-            responseWithCache(out, offset);
+            responseWithCache(socketOut, offset);
         } else {
-            responseWithoutCache(out, offset);
+            responseWithoutCache(socketOut, offset);
         }
     }
 
-    private boolean isUseCache(GetRequest request) throws ProxyCacheException {
-        long sourceLength = source.length();
+    /**
+     * 是否先缓存再播放
+     * @param request
+     * @return
+     * @throws ProxyCacheException
+     */
+    private boolean isUseCache(HttpGetRequest request) throws ProxyCacheException {
+        long sourceLength = httpSource.length();
         boolean sourceLengthKnown = sourceLength > 0;
         long cacheAvailable = cache.available();
         // do not use cache for partial requests which too far from available cache. It seems user seek video.
         return !sourceLengthKnown || !request.partial || request.rangeOffset <= cacheAvailable + sourceLength * NO_CACHE_BARRIER;
     }
 
-    private String newResponseHeaders(GetRequest request) throws IOException, ProxyCacheException {
-        String mime = source.getMime();
+    private String newResponseHeaders(HttpGetRequest request) throws IOException, ProxyCacheException {
+        String mime = httpSource.getMime();
         boolean mimeKnown = !TextUtils.isEmpty(mime);
-        long length = cache.isCompleted() ? cache.available() : source.length();
+        long length = cache.isCompleted() ? cache.available() : httpSource.length();
         boolean lengthKnown = length >= 0;
         long contentLength = request.partial ? length - request.rangeOffset : length;
         boolean addRange = lengthKnown && request.partial;
@@ -84,7 +105,7 @@ class HttpProxyCache extends ProxyCache {
     }
 
     private void responseWithoutCache(OutputStream out, long offset) throws ProxyCacheException, IOException {
-        HttpUrlSource newSourceNoCache = new HttpUrlSource(this.source);
+        HttpUrlSource newSourceNoCache = new HttpUrlSource(this.httpSource);
         try {
             newSourceNoCache.open((int) offset);
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -106,7 +127,7 @@ class HttpProxyCache extends ProxyCache {
     @Override
     protected void onCachePercentsAvailableChanged(int percents) {
         if (listener != null) {
-            listener.onCacheAvailable(cache.file, source.getUrl(), percents);
+            listener.onCacheAvailable(cache.file, httpSource.getUrl(), percents);
         }
     }
 }

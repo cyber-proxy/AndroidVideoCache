@@ -1,5 +1,7 @@
 package com.danikula.videocache;
 
+import com.danikula.videocache.core.ProxyCache;
+
 /**
  * Indicates interruption error in work of {@link ProxyCache} fired by user.
  *

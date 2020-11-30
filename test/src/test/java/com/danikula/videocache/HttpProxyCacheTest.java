@@ -1,7 +1,10 @@
 package com.danikula.videocache;
 
 import com.danikula.android.garden.io.IoUtils;
+import com.danikula.videocache.core.HttpProxyCache;
 import com.danikula.videocache.file.FileCache;
+import com.danikula.videocache.source.HttpUrlSource;
+import com.danikula.videocache.source.SourceInfo;
 import com.danikula.videocache.sourcestorage.SourceInfoStorage;
 import com.danikula.videocache.sourcestorage.SourceInfoStorageFactory;
 import com.danikula.videocache.support.ProxyCacheTestUtils;
@@ -145,7 +148,7 @@ public class HttpProxyCacheTest extends BaseTest {
         String zeroSizeUrl = "https://raw.githubusercontent.com/danikula/AndroidVideoCache/master/files/empty.txt";
         HttpUrlSource source = new HttpUrlSource(zeroSizeUrl);
         HttpProxyCache proxyCache = new HttpProxyCache(source, new FileCache(ProxyCacheTestUtils.newCacheFile()));
-        GetRequest request = new GetRequest("GET /" + HTTP_DATA_URL + " HTTP/1.1");
+        HttpGetRequest request = new HttpGetRequest("GET /" + HTTP_DATA_URL + " HTTP/1.1");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Socket socket = mock(Socket.class);
         when(socket.getOutputStream()).thenReturn(out);
@@ -239,7 +242,7 @@ public class HttpProxyCacheTest extends BaseTest {
     }
 
     private Response processRequest(HttpProxyCache proxyCache, String httpRequest) throws ProxyCacheException, IOException {
-        GetRequest request = new GetRequest(httpRequest);
+        HttpGetRequest request = new HttpGetRequest(httpRequest);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Socket socket = mock(Socket.class);
         when(socket.getOutputStream()).thenReturn(out);

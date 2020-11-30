@@ -1,4 +1,4 @@
-package com.danikula.videocache;
+package com.danikula.videocache.util;
 
 public final class Preconditions {
 
@@ -24,13 +24,13 @@ public final class Preconditions {
         return reference;
     }
 
-    static void checkArgument(boolean expression) {
+    public static void checkArgument(boolean expression) {
         if (!expression) {
             throw new IllegalArgumentException();
         }
     }
 
-    static void checkArgument(boolean expression, String errorMessage) {
+    public static void checkArgument(boolean expression, String errorMessage) {
         if (!expression) {
             throw new IllegalArgumentException(errorMessage);
         }

@@ -1,11 +1,17 @@
-package com.danikula.videocache;
+package com.danikula.videocache.core;
+
+import com.danikula.videocache.Cache;
+import com.danikula.videocache.InterruptedProxyCacheException;
+import com.danikula.videocache.ProxyCacheException;
+import com.danikula.videocache.source.Source;
+import com.danikula.videocache.util.ProxyCacheUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 
 /**
  * Proxy for {@link Source} with caching support ({@link Cache}).
@@ -16,7 +22,7 @@ import static com.danikula.videocache.Preconditions.checkNotNull;
  *
  * @author Alexey Danilov (danikula@gmail.com).
  */
-class ProxyCache {
+public class ProxyCache {
 
     private static final Logger LOG = LoggerFactory.getLogger("ProxyCache");
     private static final int MAX_READ_SOURCE_ATTEMPTS = 1;
@@ -36,14 +42,25 @@ class ProxyCache {
         this.readSourceErrorsCount = new AtomicInteger();
     }
 
+    /**
+     * 此处是循环执行的
+     * @param buffer
+     * @param offset
+     * @param length
+     * @return
+     * @throws ProxyCacheException
+     */
     public int read(byte[] buffer, long offset, int length) throws ProxyCacheException {
         ProxyCacheUtils.assertBuffer(buffer, offset, length);
 
         while (!cache.isCompleted() && cache.available() < (offset + length) && !stopped) {
             readSourceAsync();
-            waitForSourceData();
+            waitForSourceData(); // 每次读取一定字节后，从这里开始执行
             checkReadSourceErrorsCount();
         }
+
+        // cache读取完成后，这里开始执行
+        // 从cache中读取length大小的字节到buffer中
         int read = cache.read(buffer, offset, length);
         if (cache.isCompleted() && percentsAvailable != 100) {
             percentsAvailable = 100;
@@ -75,14 +92,29 @@ class ProxyCache {
         }
     }
 
+    /**
+     * 异步读取。。。，并通知可读
+     * @throws ProxyCacheException
+     */
     private synchronized void readSourceAsync() throws ProxyCacheException {
         boolean readingInProgress = sourceReaderThread != null && sourceReaderThread.getState() != Thread.State.TERMINATED;
+
         if (!stopped && !cache.isCompleted() && !readingInProgress) {
-            sourceReaderThread = new Thread(new SourceReaderRunnable(), "Source reader for " + source);
+            sourceReaderThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    readSource();
+                }
+            }, "Source reader for " + source);
+
             sourceReaderThread.start();
         }
     }
 
+    /**
+     * 超时等待1s
+     * @throws ProxyCacheException
+     */
     private void waitForSourceData() throws ProxyCacheException {
         synchronized (wc) {
             try {
@@ -115,6 +147,10 @@ class ProxyCache {
     protected void onCachePercentsAvailableChanged(int percentsAvailable) {
     }
 
+    /**
+     * 从http中读取字节流并写入到缓存
+     * 每写入DEFAULT_BUFFER_SIZE大小的字节，则通知
+     */
     private void readSource() {
         long sourceAvailable = -1;
         long offset = 0;
@@ -132,8 +168,10 @@ class ProxyCache {
                     cache.append(buffer, readBytes);
                 }
                 offset += readBytes;
+                // 通知缓存进度
                 notifyNewCacheDataAvailable(offset, sourceAvailable);
             }
+            // 读取完成后，通知缓存已经准备好
             tryComplete();
             onSourceRead();
         } catch (Throwable e) {
@@ -177,14 +215,6 @@ class ProxyCache {
             LOG.debug("ProxyCache is interrupted");
         } else {
             LOG.error("ProxyCache error", e);
-        }
-    }
-
-    private class SourceReaderRunnable implements Runnable {
-
-        @Override
-        public void run() {
-            readSource();
         }
     }
 }

@@ -1,4 +1,7 @@
-package com.danikula.videocache;
+package com.danikula.videocache.others;
+
+import com.danikula.videocache.ProxyCacheException;
+import com.danikula.videocache.source.Source;
 
 import java.io.ByteArrayInputStream;
 

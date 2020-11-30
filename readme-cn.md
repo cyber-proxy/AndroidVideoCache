@@ -1,18 +1,18 @@
-## Video cache support for Android
+## Android视频缓存库——AndroidVideoCache
 [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-AndroidVideoCache-brightgreen.svg?style=flat)](http://android-arsenal.com/details/1/1751) [![Build Status](https://api.travis-ci.org/danikula/AndroidVideoCache.svg?branch=master)](https://travis-ci.org/danikula/AndroidVideoCache/) [ ![Download](https://api.bintray.com/packages/alexeydanilov/maven/videocache/images/download.svg) ](https://bintray.com/alexeydanilov/maven/videocache/_latestVersion)
-[中文文档](readme-cn.md)
+[English-doc](README.md)
 
-## Table of Content
-- [Why AndroidVideoCache?](#why-androidvideocache)
-- [Features](#features)
-- [Get started](#get-started)
-- [Recipes](#recipes)
-  - [Disk cache limit](#disk-cache-limit)
-  - [Listen caching progress](#listen-caching-progress)
-  - [Providing names for cached files](#providing-names-for-cached-files)
-  - [Adding custom http headers](#adding-custom-http-headers)
+## 目录
+- [为何要使用视频缓存?](#为何要使用视频缓存?)
+- [特征](#特征)
+- [代码接入](#代码接入)
+- [其他接口](#其他接口)
+  - [Disk缓存容量设置](#Disk缓存容量设置)
+  - [缓存进度监听](#缓存进度监听)
+  - [设置缓存文件名](#设置缓存文件名)
+  - [添加自定义Http头](#添加自定义Http头)
   - [Using exoPlayer](#using-exoplayer)
-  - [Sample](#sample)
+  - [代码示例](#sample)
 - [Known problems](#known-problems)
 - [Whats new](#whats-new)
 - [Code contributions](#code-contributions)
@@ -20,11 +20,11 @@
 - [Questions?](#questions)
 - [License](#license)
 
-## Why AndroidVideoCache?
+## 为何要使用视频缓存?
 Because there is no sense to download video a lot of times while streaming!
 `AndroidVideoCache` allows to add caching support to your `VideoView/MediaPlayer`, [ExoPlayer](https://github.com/danikula/AndroidVideoCache/tree/exoPlayer) or any another player with help of single line!
 
-## Features
+## 特征
 - caching to disk during streaming;
 - offline work with cached resources;
 - partial loading;
@@ -33,7 +33,7 @@ Because there is no sense to download video a lot of times while streaming!
 
 Note `AndroidVideoCache` works only with **direct urls** to media file, it  [**doesn't support**](https://github.com/danikula/AndroidVideoCache/issues/19) any streaming technology like DASH, SmoothStreaming, HLS.  
 
-## Get started
+## 代码接入
 Just add dependency (`AndroidVideoCache` is available in jcenter):
 ```
 dependencies {
@@ -80,8 +80,8 @@ public class App extends Application {
 or use [simple factory](http://pastebin.com/s2fafSYS).
 More preferable way is use some dependency injector like [Dagger](http://square.github.io/dagger/).
 
-## Recipes
-### Disk cache limit
+## 其他接口
+### Disk缓存容量设置
 By default `HttpProxyCacheServer` uses 512Mb for caching files. You can change this value:
 
 ```java
@@ -112,14 +112,14 @@ private HttpProxyCacheServer newProxy() {
 ```
 
 
-### Listen caching progress
+### 缓存进度监听
 Use `HttpProxyCacheServer.registerCacheListener(CacheListener listener)` method to set listener with callback `onCacheAvailable(File cacheFile, String url, int percentsAvailable)` to be aware of caching progress. Do not forget to to unsubscribe listener with help of `HttpProxyCacheServer.unregisterCacheListener(CacheListener listener)` method to avoid memory leaks.
 
 Use `HttpProxyCacheServer.isCached(String url)` method to check was url's content fully cached to file or not.
 
 See `sample` app for more details.
 
-### Providing names for cached files
+### 设置缓存文件名
 By default `AndroidVideoCache` uses MD5 of video url as file name. But in some cases url is not stable and it can contain some generated parts (e.g. session token). In this case caching mechanism will be broken. To fix it you have to provide own `FileNameGenerator`:
 ``` java
 public class MyFileNameGenerator implements FileNameGenerator {
@@ -139,7 +139,7 @@ HttpProxyCacheServer proxy = HttpProxyCacheServer.Builder(context)
     .build()
 ```
 
-### Adding custom http headers
+### 添加自定义Http头
 You can add custom headers to requests with help of `HeadersInjector`:
 ``` java
 public class UserAgentHeadersInjector implements HeaderInjector {

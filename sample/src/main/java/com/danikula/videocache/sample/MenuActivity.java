@@ -1,8 +1,8 @@
 package com.danikula.videocache.sample;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentActivity;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
@@ -33,10 +33,10 @@ public class MenuActivity extends FragmentActivity {
     @NonNull
     private List<ListEntry> buildListData() {
         return Arrays.asList(
-                new ListEntry("Single Video", SingleVideoActivity_.class),
-                new ListEntry("Multiple Videos", MultipleVideosActivity_.class),
-                new ListEntry("Video Gallery with pre-caching", VideoGalleryActivity_.class),
-                new ListEntry("Shared Cache", SharedCacheActivity_.class)
+                new ListEntry("Single Video", SingleVideoActivity.class),
+                new ListEntry("Multiple Videos", MultipleVideosActivity.class),
+                new ListEntry("Video Gallery with pre-caching", VideoGalleryActivity.class),
+                new ListEntry("Shared Cache", SharedCacheActivity.class)
         );
     }
 

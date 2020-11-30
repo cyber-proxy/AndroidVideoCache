@@ -8,7 +8,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 
 /**
  * {@link ProxySelector} that ignore system default proxies for concrete host.
@@ -17,7 +17,7 @@ import static com.danikula.videocache.Preconditions.checkNotNull;
  *
  * @author Alexey Danilov (danikula@gmail.com).
  */
-class IgnoreHostProxySelector extends ProxySelector {
+public class IgnoreHostProxySelector extends ProxySelector {
 
     private static final List<Proxy> NO_PROXY_LIST = Arrays.asList(Proxy.NO_PROXY);
 
@@ -31,8 +31,11 @@ class IgnoreHostProxySelector extends ProxySelector {
         this.portToIgnore = portToIgnore;
     }
 
-    static void install(String hostToIgnore, int portToIgnore) {
+    public static void install(String hostToIgnore, int portToIgnore) {
+        // 获取默认代理
         ProxySelector defaultProxySelector = ProxySelector.getDefault();
+
+        // 设置默认代理
         ProxySelector ignoreHostProxySelector = new IgnoreHostProxySelector(defaultProxySelector, hostToIgnore, portToIgnore);
         ProxySelector.setDefault(ignoreHostProxySelector);
     }

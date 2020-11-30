@@ -1,5 +1,8 @@
 package com.danikula.videocache;
 
+import com.danikula.videocache.api.HttpProxyCacheServer;
+import com.danikula.videocache.source.HttpUrlSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +23,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import static com.danikula.videocache.Preconditions.checkArgument;
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkArgument;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
@@ -30,7 +33,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * @author Alexey Danilov (danikula@gmail.com).
  */
 
-class Pinger {
+public class Pinger {
 
     private static final Logger LOG = LoggerFactory.getLogger("Pinger");
     private static final String PING_REQUEST = "ping";
@@ -40,12 +43,12 @@ class Pinger {
     private final String host;
     private final int port;
 
-    Pinger(String host, int port) {
+    public Pinger(String host, int port) {
         this.host = checkNotNull(host);
         this.port = port;
     }
 
-    boolean ping(int maxAttempts, int startTimeout) {
+    public boolean ping(int maxAttempts, int startTimeout) {
         checkArgument(maxAttempts >= 1);
         checkArgument(startTimeout > 0);
 
@@ -83,11 +86,11 @@ class Pinger {
         }
     }
 
-    boolean isPingRequest(String request) {
+    public boolean isPingRequest(String request) {
         return PING_REQUEST.equals(request);
     }
 
-    void responseToPing(Socket socket) throws IOException {
+    public void responseToPing(Socket socket) throws IOException {
         OutputStream out = socket.getOutputStream();
         out.write("HTTP/1.1 200 OK\n\n".getBytes());
         out.write(PING_RESPONSE.getBytes());

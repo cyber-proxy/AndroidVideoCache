@@ -1,6 +1,8 @@
 package com.danikula.videocache;
 
 import com.danikula.videocache.headers.HeaderInjector;
+import com.danikula.videocache.source.HttpUrlSource;
+import com.danikula.videocache.source.Source;
 import com.danikula.videocache.sourcestorage.SourceInfoStorage;
 import com.danikula.videocache.sourcestorage.SourceInfoStorageFactory;
 import com.danikula.videocache.support.ProxyCacheTestUtils;
@@ -12,7 +14,7 @@ import org.mockito.Mockito;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-import static com.danikula.videocache.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
+import static com.danikula.videocache.util.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
 import static com.danikula.videocache.support.ProxyCacheTestUtils.ASSETS_DATA_BIG_NAME;
 import static com.danikula.videocache.support.ProxyCacheTestUtils.ASSETS_DATA_NAME;
 import static com.danikula.videocache.support.ProxyCacheTestUtils.HTTP_DATA_BIG_SIZE;

@@ -1,4 +1,4 @@
-package com.danikula.videocache;
+package com.danikula.videocache.source;
 
 /**
  * Stores source's info.

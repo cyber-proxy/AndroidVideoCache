@@ -1,7 +1,7 @@
 package com.danikula.videocache.sourcestorage;
 
 import com.danikula.videocache.BaseTest;
-import com.danikula.videocache.SourceInfo;
+import com.danikula.videocache.source.SourceInfo;
 
 import org.junit.After;
 import org.junit.Before;

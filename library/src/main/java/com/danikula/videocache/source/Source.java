@@ -1,4 +1,6 @@
-package com.danikula.videocache;
+package com.danikula.videocache.source;
+
+import com.danikula.videocache.ProxyCacheException;
 
 /**
  * Source for proxy.

@@ -2,6 +2,7 @@ package com.danikula.videocache;
 
 import com.danikula.videocache.file.FileNameGenerator;
 import com.danikula.videocache.file.Md5FileNameGenerator;
+import com.danikula.videocache.util.ProxyCacheUtils;
 
 import org.junit.Test;
 

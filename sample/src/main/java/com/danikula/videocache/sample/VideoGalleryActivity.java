@@ -1,11 +1,10 @@
 package com.danikula.videocache.sample;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
-import com.viewpagerindicator.CirclePageIndicator;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
@@ -15,13 +14,12 @@ import org.androidannotations.annotations.ViewById;
 public class VideoGalleryActivity extends FragmentActivity {
 
     @ViewById ViewPager viewPager;
-    @ViewById CirclePageIndicator viewPagerIndicator;
 
     @AfterViews
     void afterViewInjected() {
         ViewsPagerAdapter viewsPagerAdapter = new ViewsPagerAdapter(this);
         viewPager.setAdapter(viewsPagerAdapter);
-        viewPagerIndicator.setViewPager(viewPager);
+//        viewPagerIndicator.setViewPager(viewPager);
     }
 
     private static final class ViewsPagerAdapter extends FragmentStatePagerAdapter {

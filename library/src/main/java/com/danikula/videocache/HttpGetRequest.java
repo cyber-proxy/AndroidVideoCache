@@ -9,14 +9,14 @@ import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 
 /**
  * Model for Http GET request.
  *
  * @author Alexey Danilov (danikula@gmail.com).
  */
-class GetRequest {
+public class HttpGetRequest {
 
     private static final Pattern RANGE_HEADER_PATTERN = Pattern.compile("[R,r]ange:[ ]?bytes=(\\d*)-");
     private static final Pattern URL_PATTERN = Pattern.compile("GET /(.*) HTTP");
@@ -25,7 +25,7 @@ class GetRequest {
     public final long rangeOffset;
     public final boolean partial;
 
-    public GetRequest(String request) {
+    public HttpGetRequest(String request) {
         checkNotNull(request);
         long offset = findRangeOffset(request);
         this.rangeOffset = Math.max(0, offset);
@@ -33,14 +33,14 @@ class GetRequest {
         this.uri = findUri(request);
     }
 
-    public static GetRequest read(InputStream inputStream) throws IOException {
+    public static HttpGetRequest read(InputStream inputStream) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
         StringBuilder stringRequest = new StringBuilder();
         String line;
         while (!TextUtils.isEmpty(line = reader.readLine())) { // until new line (headers ending)
             stringRequest.append(line).append('\n');
         }
-        return new GetRequest(stringRequest.toString());
+        return new HttpGetRequest(stringRequest.toString());
     }
 
     private long findRangeOffset(String request) {

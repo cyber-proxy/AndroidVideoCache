@@ -1,8 +1,15 @@
-package com.danikula.videocache;
+package com.danikula.videocache.api;
 
 import android.content.Context;
 import android.net.Uri;
 
+import com.danikula.videocache.CacheListener;
+import com.danikula.videocache.Config;
+import com.danikula.videocache.HttpGetRequest;
+import com.danikula.videocache.HttpProxyCacheServerClients;
+import com.danikula.videocache.IgnoreHostProxySelector;
+import com.danikula.videocache.Pinger;
+import com.danikula.videocache.ProxyCacheException;
 import com.danikula.videocache.file.DiskUsage;
 import com.danikula.videocache.file.FileNameGenerator;
 import com.danikula.videocache.file.Md5FileNameGenerator;
@@ -12,6 +19,8 @@ import com.danikula.videocache.headers.EmptyHeadersInjector;
 import com.danikula.videocache.headers.HeaderInjector;
 import com.danikula.videocache.sourcestorage.SourceInfoStorage;
 import com.danikula.videocache.sourcestorage.SourceInfoStorageFactory;
+import com.danikula.videocache.util.ProxyCacheUtils;
+import com.danikula.videocache.util.StorageUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +38,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.danikula.videocache.Preconditions.checkAllNotNull;
-import static com.danikula.videocache.Preconditions.checkNotNull;
+import static com.danikula.videocache.util.Preconditions.checkAllNotNull;
+import static com.danikula.videocache.util.Preconditions.checkNotNull;
 
 /**
  * Simple lightweight proxy server with file caching support that handles HTTP requests.
@@ -57,7 +66,7 @@ public class HttpProxyCacheServer {
     private static final String PROXY_HOST = "127.0.0.1";
 
     private final Object clientsLock = new Object();
-    private final ExecutorService socketProcessor = Executors.newFixedThreadPool(8);
+    private final ExecutorService socketProcessorThreadPool = Executors.newFixedThreadPool(8);
     private final Map<String, HttpProxyCacheServerClients> clientsMap = new ConcurrentHashMap<>();
     private final ServerSocket serverSocket;
     private final int port;
@@ -72,18 +81,31 @@ public class HttpProxyCacheServer {
     private HttpProxyCacheServer(Config config) {
         this.config = checkNotNull(config);
         try {
+            // server's  ip,port
             InetAddress inetAddress = InetAddress.getByName(PROXY_HOST);
             this.serverSocket = new ServerSocket(0, 8, inetAddress);
             this.port = serverSocket.getLocalPort();
+
+            // 当前代理服务器的http请求走默认代理
             IgnoreHostProxySelector.install(PROXY_HOST, port);
-            CountDownLatch startSignal = new CountDownLatch(1);
-            this.waitConnectionThread = new Thread(new WaitRequestsRunnable(startSignal));
+
+            //
+            final CountDownLatch startSignal = new CountDownLatch(1);
+
+            this.waitConnectionThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    startSignal.countDown();
+                    waitForRequest();
+                }
+            });
             this.waitConnectionThread.start();
             startSignal.await(); // freeze thread, wait for server starts
+
             this.pinger = new Pinger(PROXY_HOST, port);
             LOG.info("Proxy cache server started. Is it alive? " + isAlive());
         } catch (IOException | InterruptedException e) {
-            socketProcessor.shutdown();
+            socketProcessorThreadPool.shutdown();
             throw new IllegalStateException("Error starting local proxy server", e);
         }
     }
@@ -185,6 +207,7 @@ public class HttpProxyCacheServer {
         return pinger.ping(3, 70);   // 70+140+280=max~500ms
     }
 
+    // 返回地址：http://127.0.0.1:0/https%asd%adf%23adfv...
     private String appendToProxyUrl(String url) {
         return String.format(Locale.US, "http://%s:%d/%s", PROXY_HOST, port, ProxyCacheUtils.encode(url));
     }
@@ -212,23 +235,36 @@ public class HttpProxyCacheServer {
         }
     }
 
+    /**
+     * 循环处理socket连接
+     */
     private void waitForRequest() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                Socket socket = serverSocket.accept();
+                final Socket socket = serverSocket.accept();
                 LOG.debug("Accept new socket " + socket);
-                socketProcessor.submit(new SocketProcessorRunnable(socket));
+
+                socketProcessorThreadPool.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 根据不同的请求处理socket
+                        processSocket(socket);
+                    }
+                });
             }
         } catch (IOException e) {
             onError(new ProxyCacheException("Error during waiting connection", e));
         }
     }
 
+    //
     private void processSocket(Socket socket) {
         try {
-            GetRequest request = GetRequest.read(socket.getInputStream());
+            HttpGetRequest request = HttpGetRequest.read(socket.getInputStream());
             LOG.debug("Request to cache proxy:" + request);
+
             String url = ProxyCacheUtils.decode(request.uri);
+
             if (pinger.isPingRequest(url)) {
                 pinger.responseToPing(socket);
             } else {
@@ -310,35 +346,6 @@ public class HttpProxyCacheServer {
 
     private void onError(Throwable e) {
         LOG.error("HttpProxyCacheServer error", e);
-    }
-
-    private final class WaitRequestsRunnable implements Runnable {
-
-        private final CountDownLatch startSignal;
-
-        public WaitRequestsRunnable(CountDownLatch startSignal) {
-            this.startSignal = startSignal;
-        }
-
-        @Override
-        public void run() {
-            startSignal.countDown();
-            waitForRequest();
-        }
-    }
-
-    private final class SocketProcessorRunnable implements Runnable {
-
-        private final Socket socket;
-
-        public SocketProcessorRunnable(Socket socket) {
-            this.socket = socket;
-        }
-
-        @Override
-        public void run() {
-            processSocket(socket);
-        }
     }
 
     /**

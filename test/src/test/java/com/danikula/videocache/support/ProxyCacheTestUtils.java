@@ -1,11 +1,11 @@
 package com.danikula.videocache.support;
 
 import com.danikula.android.garden.io.IoUtils;
-import com.danikula.videocache.ByteArraySource;
-import com.danikula.videocache.HttpProxyCacheServer;
-import com.danikula.videocache.HttpUrlSource;
+import com.danikula.videocache.others.ByteArraySource;
+import com.danikula.videocache.api.HttpProxyCacheServer;
+import com.danikula.videocache.source.HttpUrlSource;
 import com.danikula.videocache.ProxyCacheException;
-import com.danikula.videocache.Source;
+import com.danikula.videocache.source.Source;
 import com.danikula.videocache.sourcestorage.SourceInfoStorage;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;

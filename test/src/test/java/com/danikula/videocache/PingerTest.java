@@ -1,5 +1,7 @@
 package com.danikula.videocache;
 
+import com.danikula.videocache.api.HttpProxyCacheServer;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;

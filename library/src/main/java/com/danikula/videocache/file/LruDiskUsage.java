@@ -27,12 +27,19 @@ public abstract class LruDiskUsage implements DiskUsage {
 
     private void touchInBackground(File file) throws IOException {
         Files.setLastModifiedNow(file);
+        /**
+         * 获取按时间排序的文件列表
+         */
         List<File> files = Files.getLruListFiles(file.getParentFile());
         trim(files);
     }
 
     protected abstract boolean accept(File file, long totalSize, int totalCount);
 
+    /**
+     * 遍历，依次删除文件，只到满足预设定的（大小或数量等）条件
+     * @param files
+     */
     private void trim(List<File> files) {
         long totalSize = countTotalSize(files);
         int totalCount = files.size();
